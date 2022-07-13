@@ -1,21 +1,21 @@
 <template>
   <div class="main" v-for="floor in floors.slice().reverse()" :key="floor.id">
     <div class="floor"></div>
-    <div>
-      <button
-        :class="[{ active: floor.favorited }, { not_active: !floor.favorited }]"
+    <div class="button_container">
+      <p class="floor_number">{{ floor.num }} этаж</p>
+      <span
+        class="dot"
+        :class="{ active: floor.favorited == true }"
         @click="addToElevatorQueue(floor), (floor.favorited = true)"
-      >
-        {{ floor.num }}
-      </button>
+      ></span>
     </div>
+    <div class="elevator" :style="elevatorPos"></div>
   </div>
-  <h1>{{ currentFloor }}</h1>
-  <h1>{{ elevatorQueue }}</h1>
+  <h3 class="queue" style="display: none">{{ elevatorQueue }}</h3>
 </template>
 
 <script>
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 export default {
   setup() {
     const floors = [
@@ -25,27 +25,28 @@ export default {
       { id: 4, num: 4, favorited: false },
       { id: 5, num: 5, favorited: false },
     ];
+    let callFloor = ref(1);
     let currentFloor = ref(1);
     let elevatorQueue = ref([]);
     let isMoving = ref(false);
     let isMovingUp = ref(false);
     let timer = ref(1);
+    let elevatorPos = computed(() => ({
+      bottom: 19.5 * callFloor.value - 19.54 + "vh",
+      "transition-duration": timer.value + "s",
+    }));
 
     async function elevatorMove() {
       if (elevatorQueue.value.length) {
         isMoving.value = true;
-        console.log("start!");
+        callFloor.value = elevatorQueue.value[0].num;
         timer.value = Math.abs(currentFloor.value - elevatorQueue.value[0].num);
         isMovingUp.value = elevatorQueue.value[0].num > currentFloor.value;
         await sleep(timer.value * 1000);
-        console.log("setting current floor");
         setCurrentFloor(elevatorQueue.value[0].num);
-        console.log("set!");
-        await sleep(3000);
-        console.log("delete");
         elevatorQueue.value[0].favorited = false;
+        await sleep(3000);
         elevatorQueue.value.shift();
-        console.log("del!");
         isMoving.value = false;
         elevatorMove();
       }
@@ -76,17 +77,20 @@ export default {
         if (newQueue > oldQueue && !isMoving.value) {
           elevatorMove();
         }
-      },
-      { deep: false }
+      }
     );
 
     return {
+      isMoving,
+      isMovingUp,
       floors,
       currentFloor,
       setCurrentFloor,
       elevatorMove,
       elevatorQueue,
       addToElevatorQueue,
+      callFloor,
+      elevatorPos,
     };
   },
   components: {},
@@ -94,34 +98,61 @@ export default {
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+* {
+  margin: 0;
+  padding: 0;
+}
+
+.dot {
+  height: 25px;
+  width: 25px;
+  background-color: #bbb;
+  border-radius: 50%;
+  display: inline-block;
 }
 
 .main {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
-}
-.floor {
-  display: flex;
-  border: 1px solid black;
-  flex-direction: column-reverse;
-  height: 150px;
-  width: 150px;
+  align-items: center;
 }
 
-.elevator_btn {
-  color: white;
-  cursor: pointer;
+.button_container {
+  width: 100px;
+  margin-left: 20px;
+}
+
+.floor_number {
+  margin-bottom: 5px;
+}
+
+.floor {
+  display: flex;
+  border-left: 2px solid black;
+  border-right: 2px solid black;
+  flex-direction: column-reverse;
+  height: 19.56vh;
+  width: 184px;
+}
+
+.elevator {
+  background: aqua;
+  height: 19.56vh;
+  width: 185px;
+  position: absolute;
+  transition-property: all;
+  transition-timing-function: linear;
+  margin-bottom: 20px;
+  margin-left: 1px;
 }
 
 .active {
   background-color: red;
+}
+
+.not_active {
+  background-color: white;
+  cursor: pointer;
 }
 </style>
