@@ -6,7 +6,7 @@
       <span
         class="dot"
         :class="{ active: floor.favorited == true }"
-        @click="addToElevatorQueue(floor), (floor.favorited = true)"
+        @click="addToElevatorQueue(floor)"
       ></span>
     </div>
     <div
@@ -80,6 +80,7 @@ export default {
         currentFloor.value !== floor.num
       ) {
         elevatorQueue.value.push(floor);
+        floor.favorited = true;
       }
     }
 
