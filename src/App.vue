@@ -9,13 +9,32 @@
         @click="addToElevatorQueue(floor), (floor.favorited = true)"
       ></span>
     </div>
-    <div class="elevator" :style="elevatorPos"></div>
+    <div
+      class="elevator"
+      :style="elevatorPos"
+      :class="{ 'elevator-stop': isStopped }"
+    >
+      <div v-if="isMoving" class="elevator_info">
+        <img
+          v-if="isMovingUp"
+          class="elevator_info__icon"
+          src="./assets/arrowUp.png"
+        />
+        <img
+          v-if="!isMovingUp"
+          class="elevator_info__icon"
+          src="./assets/arrowDown.png"
+        />
+        <h3 class="elevator_info__num">{{ elevatorQueue[0].num }}</h3>
+      </div>
+    </div>
   </div>
   <h3 class="queue" style="display: none">{{ elevatorQueue }}</h3>
 </template>
 
 <script>
 import { ref, watch, computed } from "vue";
+
 export default {
   setup() {
     const floors = [
@@ -30,6 +49,7 @@ export default {
     let elevatorQueue = ref([]);
     let isMoving = ref(false);
     let isMovingUp = ref(false);
+    let isStopped = ref(false);
     let timer = ref(1);
     let elevatorPos = computed(() => ({
       bottom: 19.5 * callFloor.value - 19.54 + "vh",
@@ -45,9 +65,11 @@ export default {
         await sleep(timer.value * 1000);
         setCurrentFloor(elevatorQueue.value[0].num);
         elevatorQueue.value[0].favorited = false;
+        isStopped.value = true;
         await sleep(3000);
         elevatorQueue.value.shift();
         isMoving.value = false;
+        isStopped.value = false;
         elevatorMove();
       }
     }
@@ -85,6 +107,7 @@ export default {
       isMovingUp,
       floors,
       currentFloor,
+      isStopped,
       setCurrentFloor,
       elevatorMove,
       elevatorQueue,
@@ -151,8 +174,36 @@ export default {
   background-color: red;
 }
 
-.not_active {
-  background-color: white;
-  cursor: pointer;
+.elevator-stop {
+  animation-name: elevator;
+  animation-iteration-count: 3;
+  animation-timing-function: linear;
+  animation-duration: 1s;
+}
+@keyframes elevator {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.1;
+  }
+}
+
+.elevator_info {
+  display: flex;
+  flex-direction: row;
+  background-color: rgba(255, 0, 0, 0.2);
+}
+
+.elevator_info__icon {
+  height: 30px;
+  width: 30px;
+  margin-left: 40px;
+  margin-top: 5px;
+}
+
+.elevator_info__num {
+  margin-left: 5px;
+  margin-top: 5px;
 }
 </style>
